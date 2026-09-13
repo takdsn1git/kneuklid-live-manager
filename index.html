@@ -10,46 +10,21 @@
   </style>
 </head>
 <body>
-
-<iframe id="app" src="./app-base.html?v=15"></iframe>
-
+<iframe id="app" src="./app-base.html?v=16"></iframe>
 <script>
-const f = document.getElementById('app');
-
-f.addEventListener('load', () => {
-  try {
-    const d = f.contentDocument;
-
-    const patch = d.createElement('script');
-    patch.src = './app-patch.js?v=15';
-
-    patch.onload = () => {
-      const v14 = d.createElement('script');
-      v14.src = './v14.js?v=15';
-
-      v14.onload = () => {
-        [
-          './firebase-login-ui.js?v=15',
-          './firebase-loader.js?v=15',
-          './firebase-auth.js?v=15',
-          './firebase-data.js?v=15'
-        ].forEach(src => {
-          const s = d.createElement('script');
-          s.src = src;
-          d.body.appendChild(s);
-        });
-      };
-
-      d.body.appendChild(v14);
-    };
-
-    d.body.appendChild(patch);
-
-  } catch(e) {
-    console.error(e);
-  }
+const f=document.getElementById('app');
+function addScript(d,src){return new Promise((resolve,reject)=>{const s=d.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;d.body.appendChild(s)})}
+f.addEventListener('load',async()=>{
+  try{
+    const d=f.contentDocument;
+    await addScript(d,'./app-patch.js?v=16');
+    await addScript(d,'./v14.js?v=16');
+    await addScript(d,'./firebase-login-ui.js?v=16');
+    await addScript(d,'./firebase-auth.js?v=16');
+    await addScript(d,'./firebase-data.js?v=16');
+    await addScript(d,'./firebase-loader.js?v=16');
+  }catch(e){console.error('App bootstrap failed',e)}
 });
 </script>
-
 </body>
 </html>
