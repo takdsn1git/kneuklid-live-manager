@@ -1,0 +1,1 @@
+(()=>{const h=document.querySelector('.hero');if(!h)return;const d=document.createElement('div');d.style='display:flex;justify-content:flex-end;gap:10px;margin-bottom:12px';d.innerHTML='<span id="firebaseStatus" style="font-size:12px;color:#667085">未ログイン</span><button id="firebaseLogin" class="btn">Googleでログイン</button>';h.prepend(d)})();
