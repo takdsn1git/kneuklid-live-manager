@@ -1,3 +1,79 @@
-(()=>{function apply(){const style=document.createElement('style');style.textContent='.taskColumns{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}.taskColumn{background:#eef3f8;border:1px solid #d9dee7;border-radius:14px;overflow:hidden;min-height:220px}.taskColumnHead{background:#1f3a5f;color:#fff;padding:12px 10px;text-align:center;font-weight:850;font-size:16px}.taskColumnHead .count{display:inline-block;margin-left:5px;background:#fff;color:#1f3a5f;border-radius:999px;padding:2px 7px;font-size:11px}.taskItems{padding:9px;display:grid;gap:8px}.taskItem{width:100%;border:1px solid #d6dce5;background:#fff;color:#172b4d;border-radius:9px;padding:11px 10px;text-align:left;font:inherit;font-size:13px;font-weight:750;line-height:1.45;cursor:pointer;box-shadow:0 2px 6px #1f293708}.taskItem:hover{border-color:#8fa0b6;background:#fafdff}.taskItem.doneItem{text-decoration:line-through;color:#7a8493;background:#f8fafc}.taskEmpty{padding:16px 8px;text-align:center;color:#8a94a3;font-size:12px}.dashBlock{margin:0 0 28px}.ownerSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ownerSummaryCard{background:#fff;border:1px solid #d9dee7;border-radius:14px;overflow:hidden}.ownerSummaryHead{background:#1f3a5f;color:#fff;padding:11px 14px;font-weight:850}.ownerSummaryBody{padding:14px}.ownerSummaryBody b{font-size:28px;color:#1f3a5f}.dashTwoCol{display:grid;grid-template-columns:1fr 1fr;gap:18px}.miniList{display:grid;gap:10px}.miniItem{background:#fff;border:1px solid #d9dee7;border-radius:12px;padding:12px 14px}@media(max-width:900px){.taskColumns{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.taskColumns{grid-template-columns:1fr}.ownerSummary,.dashTwoCol{grid-template-columns:1fr}}';document.head.appendChild(style);
-function renderDashboard(){const dash=document.getElementById('dashboard');if(!dash||typeof tasks==='undefined')return;const owners=['TAKUYA','Kenichi','Yutaka'];const ownerCards=owners.map(owner=>{const list=tasks.filter(t=>t.owner===owner&&t.status!=='完了');const label=owner==='Yutaka'?'YUTAKA':owner;return `<div class="ownerSummaryCard"><div class="ownerSummaryHead">${label}</div><div class="ownerSummaryBody"><b>${list.length}</b><span class="small"> 件の未完了タスク</span></div></div>`}).join('');const upcoming=(typeof schedules!=='undefined'?[...schedules]:[]).filter(x=>x.date).sort((a,b)=>(a.date+(a.time||a.start||'')).localeCompare(b.date+(b.time||b.start||''))).slice(0,3),latest=(typeof posts!=='undefined'?posts:[]).slice(0,3);dash.innerHTML=`<div class="dashBlock"><h2>担当別状況</h2><div class="ownerSummary">${ownerCards}</div></div><div class="dashTwoCol"><div><h2>次の予定</h2><div class="miniList">${upcoming.length?upcoming.map(x=>`<div class="miniItem"><strong>${E(x.title||'予定')}</strong><div class="small">${E(x.date||'')} ${E(x.time||x.start||'')}</div></div>`).join(''):'<div class="miniItem muted">予定はまだありません</div>'}</div></div><div><h2>最新の伝言</h2><div class="miniList">${latest.length?latest.map(x=>`<div class="miniItem"><strong>${E(x.title||'伝言')}</strong><div class="small">${E(x.author||'')}</div></div>`).join(''):'<div class="miniItem muted">伝言はまだありません</div>'}</div></div></div>`}
-try{if(typeof renderTasks==='function'&&typeof tasks!=='undefined'){const original=renderTasks;renderTasks=function(){original();const grid=document.getElementById('taskGrid');if(grid){const q=(document.getElementById('q')?.value||'').toLowerCase(),of=document.getElementById('of')?.value||'',sf=document.getElementById('sf')?.value||'';const filtered=tasks.filter(t=>(!q||((t.title||'')+' '+(t.desc||'')).toLowerCase().includes(q))&&(!of||t.owner===of)&&(!sf||t.status===sf));const owners=['TAKUYA','Kenichi','Yutaka','ばっさん','かえで'];grid.classList.remove('grid');grid.innerHTML=`<div class="taskColumns">${owners.map(owner=>{const list=filtered.filter(t=>t.owner===owner),label=owner==='Yutaka'?'YUTAKA':owner;return `<div class="taskColumn"><div class="taskColumnHead">${label}<span class="count">${list.length}</span></div><div class="taskItems">${list.length?list.map(t=>`<button class="taskItem ${t.status==='完了'?'doneItem':''}" onclick="taskModal('${t.id}')">${E(t.title)}</button>`).join(''):'<div class="taskEmpty">タスクなし</div>'}</div></div>`}).join('')}</div>`}renderDashboard()};renderTasks()}renderDashboard()}catch(e){console.error(e)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(apply,0));else setTimeout(apply,0)})();
+(()=>{
+const style=document.createElement('style');
+style.textContent=`
+.taskColumns{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
+.taskColumn{background:#fff;border:1px solid #d9dee7;border-radius:14px;overflow:hidden;min-height:230px;box-shadow:0 4px 14px #1f29370b}
+.taskColumnHead{background:#1f3a5f;color:#fff;padding:12px 8px;text-align:center;font-weight:850;font-size:16px}
+.taskCount{display:inline-block;margin-left:5px;background:#fff;color:#1f3a5f;border-radius:999px;padding:2px 7px;font-size:11px}
+.taskItems{padding:8px}
+.taskItem{display:block;width:100%;border:0;border-bottom:1px solid #e5e9f0;background:#fff;color:#172b4d;text-align:left;padding:11px 8px;font:inherit;font-size:13px;font-weight:750;line-height:1.45;cursor:pointer}
+.taskItem:hover{background:#f3f7fb}.taskItem:last-child{border-bottom:0}.taskEmpty{padding:18px 8px;text-align:center;color:#98a2b3;font-size:12px}
+.syncBtn,.readyBtn{border:1px solid transparent;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;cursor:pointer}
+.syncOn{background:#e5f7ed;border-color:#9fd0b0;color:#166534}.syncOff{background:#eef1f5;border-color:#c9d0da;color:#475467}
+.readyOn{background:#e5f7ed;border-color:#9fd0b0;color:#166534}.readyOff{background:#fff0d5;border-color:#efc16d;color:#8a4f00}
+.editMini{border:1px solid #cbd3df;background:#fff;color:#1f3a5f;border-radius:9px;padding:7px 10px;font-weight:700;cursor:pointer}
+.decisionGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media(max-width:900px){.taskColumns{grid-template-columns:repeat(2,minmax(0,1fr))}.decisionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.taskColumns,.decisionGrid{grid-template-columns:1fr}}
+`;
+document.head.appendChild(style);
+
+function taskFilters(){
+ const q=(document.getElementById('q')?.value||'').toLowerCase();
+ const status=document.getElementById('sf')?.value||'';
+ return tasks.filter(t=>(!q||((t.title||'')+' '+(t.desc||'')).toLowerCase().includes(q))&&(!status||t.status===status));
+}
+function renderTaskColumns(){
+ const grid=document.getElementById('taskGrid'); if(!grid)return;
+ const filtered=taskFilters();
+ const owners=['TAKUYA','Kenichi','Yutaka','ばっさん','かえで'];
+ grid.className='taskColumns';
+ grid.innerHTML=owners.map(owner=>{
+   const list=filtered.filter(t=>t.owner===owner);
+   const label=owner==='Yutaka'?'YUTAKA':owner;
+   return `<div class="taskColumn"><div class="taskColumnHead">${label}<span class="taskCount">${list.length}</span></div><div class="taskItems">${list.length?list.map(t=>`<button class="taskItem" onclick="taskModal('${t.id}')">${E(t.title)}</button>`).join(''):'<div class="taskEmpty">タスクなし</div>'}</div></div>`;
+ }).join('');
+}
+
+function restoreDecisions(){
+ const sec=document.getElementById('decisions'); if(!sec)return;
+ sec.innerHTML=`<h2>決定・方向性</h2><div class="decisionGrid">
+ <div class="card"><div class="cardTitle">ライブ</div><div class="cardBody"><b>タイトル：Beyond the Rainbow</b><div class="desc">解散を終着点にせず、前回の続きとして現在進行形の活動を示す。</div></div></div>
+ <div class="card"><div class="cardTitle">楽曲</div><div class="cardBody">全アルバムからまんべんなく選曲する方向。</div></div>
+ <div class="card"><div class="cardTitle">ドラム</div><div class="cardBody">かえでくん。</div></div>
+ <div class="card"><div class="cardTitle">リハ</div><div class="cardBody">新宿／ライブ直近で月2回程度／13:00以降〜17:00。</div></div>
+ <div class="card"><div class="cardTitle">グッズ</div><div class="cardBody">Tシャツ・タオルを受注生産。</div></div>
+ <div class="card"><div class="cardTitle">告知</div><div class="cardBody">簡易HPは作らず、公式X＋公式LINE。</div></div>
+ <div class="card"><div class="cardTitle">写真</div><div class="cardBody">新規撮影は行わない方向で検討。各自、自撮り写真をKenichiへ送る案などで検討。</div></div>
+ <div class="card"><div class="cardTitle">VIP</div><div class="cardBody">公開リハ／アフターパーティー／最前列確保／VIPグッズ。実施可否・追加料金・売上受取条件をTAKUYAが確認。</div></div>
+ </div>`;
+}
+
+window.toggleSongState=function(i,key){
+ if(!songs[i])return;
+ if(key==='sync')songs[i].sync=songs[i].sync==='あり'?'なし':'あり';
+ if(key==='ready')songs[i].ready=songs[i].ready==='準備完了'?'未だ':'準備完了';
+ save(); renderSongs();
+};
+window.editSongRow=function(i){
+ const s=songs[i]; if(!s)return;
+ M(`<h2>曲を編集</h2><div class="field"><label>曲名</label><input id="ect" value="${E(s.title)}"></div><div class="field"><label>出典</label><input id="ecs" value="${E(s.source)}"></div><div class="field"><label>メモ</label><input id="ecn" value="${E(s.note)}"></div><div class="actions"><button class="btn" onclick="closeM()">取消</button><button class="btn" onclick="saveSongEdit(${i})">保存</button></div>`);
+};
+window.saveSongEdit=function(i){songs[i].title=document.getElementById('ect').value;songs[i].source=document.getElementById('ecs').value;songs[i].note=document.getElementById('ecn').value;save();closeM();renderSongs();};
+
+renderSongs=function(){
+ const body=document.getElementById('songList'); if(!body)return;
+ body.innerHTML=songs.length?songs.map((s,i)=>`<tr><td>${i+1}</td><td><b>${E(s.title)}</b></td><td>${E(s.source)}</td><td><button class="syncBtn ${s.sync==='あり'?'syncOn':'syncOff'}" onclick="toggleSongState(${i},'sync')">${s.sync==='あり'?'同期あり':'同期なし'}</button></td><td><button class="readyBtn ${s.ready==='準備完了'?'readyOn':'readyOff'}" onclick="toggleSongState(${i},'ready')">${s.ready==='準備完了'?'準備完了':'未だ'}</button></td><td>${E(s.note)}</td><td><button class="editMini" onclick="editSongRow(${i})">編集</button></td></tr>`).join(''):'<tr><td colspan="7">まだありません</td></tr>';
+};
+const table=document.querySelector('#setlist table thead tr');if(table&&!table.textContent.includes('編集'))table.insertAdjacentHTML('beforeend','<th></th>');
+
+const baseRenderTasks=renderTasks;
+renderTasks=function(){
+ baseRenderTasks();
+ renderTaskColumns();
+};
+const of=document.getElementById('of');if(of)of.style.display='none';
+restoreDecisions();
+renderTasks();
+renderSongs();
+})();
